@@ -75,12 +75,27 @@ class Tenure(Enum):
 
 Tenure._col_name = "tenure_fmt"
 
+
+class Perf(Enum):
+    def __init__(self, id, formatted):
+        self.id = id, id
+        self.formatted = formatted
+
+    LOW = 0, "Low"
+    MIDDLE = 1, "Middle"
+    HIGH = 2, "High"
+    VERY_HIGH = 3, "Very High"
+
+
+Perf._col_name = "perf_fmt"
+
 segments = {
     # "Department": dept_map,
     "Department": Department,
     "Tenure": Tenure,
-
+    "Performance": Perf,
 }
+
 
 def tenure_mapping(tenure):
     if tenure <= 2:
@@ -88,3 +103,13 @@ def tenure_mapping(tenure):
     if tenure <= 5:
         return "Between 3 and 5 years"
     return "6 years and more"
+
+
+def perf_mapping(perf):
+    if perf <= 0.5:
+        return "Low"
+    if perf <= 0.7:
+        return "Middle"
+    if perf <= 0.9:
+        return "High"
+    return "Very High"

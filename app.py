@@ -2,7 +2,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
-from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, tenure_mapping
+from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, tenure_mapping, \
+    perf_mapping
 import matplotlib.pyplot as plt
 import mpld3
 from mpld3 import plugins
@@ -79,6 +80,7 @@ def load_datasets():
     df_valid = pd.read_csv(valid_filepath)
     df_test = pd.read_csv(test_filepath)
 
+    # add formatted department
     df_train["department_fmt"] = df_train["department"].replace(dept_map)
     df_valid["department_fmt"] = df_valid["department"].replace(dept_map)
     df_test["department_fmt"] = df_test["department"].replace(dept_map)
@@ -87,6 +89,11 @@ def load_datasets():
     df_train["tenure_fmt"] = df_train["tenure"].apply(lambda tenure: tenure_mapping(tenure))
     df_valid["tenure_fmt"] = df_valid["tenure"].apply(lambda tenure: tenure_mapping(tenure))
     df_test["tenure_fmt"] = df_test["tenure"].apply(lambda tenure: tenure_mapping(tenure))
+
+    # add perf groups
+    df_train["perf_fmt"] = df_train["last_evaluation"].apply(lambda perf: perf_mapping(perf))
+    df_valid["perf_fmt"] = df_valid["last_evaluation"].apply(lambda perf: perf_mapping(perf))
+    df_test["perf_fmt"] = df_test["last_evaluation"].apply(lambda perf: perf_mapping(perf))
 
     # rearrange cols
     cols = df_test.columns.tolist()
@@ -307,7 +314,7 @@ def build_etiquette_style(risky):
 
 def format_etiquette(segment_cat, delta):
     #
-    risky  = delta > 0
+    risky = delta > 0
     if risky:
         # risky
         comp = "more"
@@ -320,7 +327,7 @@ def format_etiquette(segment_cat, delta):
 
         segment_cat_class = "segment_cat_safe"
         etiquette_class = "etiquette_safe"
-    style = build_etiquette_style( risky=risky)
+    style = build_etiquette_style(risky=risky)
 
     # add text in html
     etiquette_txt = f"""
@@ -331,6 +338,7 @@ def format_etiquette(segment_cat, delta):
 """
     etiquette_fmt = style + etiquette_txt
     return etiquette_fmt
+
 
 def format_etiquettes(tr_by_segment, segment_enum, col_delta):
     """
@@ -344,15 +352,17 @@ def format_etiquettes(tr_by_segment, segment_enum, col_delta):
     for segment in segment_enum:
         # get category and delta value
         category = segment.formatted
-        delta = tr_by_segment.loc[ tr_by_segment[col_segment] == category, col_delta ].values.tolist()[0]
+        tr_by_segment.loc[tr_by_segment[col_segment] == category, col_delta].values.tolist()
+        delta = tr_by_segment.loc[tr_by_segment[col_segment] == category, col_delta].values.tolist()[0]
         etiquette = format_etiquette(segment_cat=category, delta=delta)
-        df_list.append(pd.DataFrame( [[category, delta, etiquette ]], columns = df_cols, index=[0]))
+        df_list.append(pd.DataFrame([[category, delta, etiquette]], columns=df_cols, index=[0]))
 
     # order etiquettes by delta
-    df_etiquettes = pd.concat( df_list, axis=0)
+    df_etiquettes = pd.concat(df_list, axis=0)
     df_etiquettes = df_etiquettes.sort_values(by="delta_prc", ascending=False)
     etiquettes = df_etiquettes["etiquette"].values.tolist()
     return etiquettes
+
 
 if select_segment:
     # get corresponding enum object
@@ -364,10 +374,11 @@ if select_segment:
             tr_by_segment
 
             # display turnovers tn by dept
-            etiquettes = format_etiquettes(tr_by_segment=tr_by_segment, segment_enum=segment_enum, col_delta="delta_prc")
+            etiquettes = format_etiquettes(tr_by_segment=tr_by_segment, segment_enum=segment_enum,
+                                           col_delta="delta_prc")
             nb_etiquettes = len(etiquettes)
             nb_cols = 2
-            nb_rows = int(np.ceil(nb_etiquettes/nb_cols))
+            nb_rows = int(np.ceil(nb_etiquettes / nb_cols))
             # create nb_cols columns nb_rows times
             etiquette_pos = 0
             for row_index in range(nb_rows):
@@ -378,4 +389,3 @@ if select_segment:
                 if etiquette_pos < nb_etiquettes:
                     col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
                     etiquette_pos += 1
-
