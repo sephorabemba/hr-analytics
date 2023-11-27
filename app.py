@@ -4,8 +4,18 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, \
-    Perf, Salary, Tenure
+from utils import (
+    train_filepath,
+    valid_filepath,
+    test_filepath,
+    model_filepath,
+    dept_map,
+    segments,
+    Perf,
+    Salary,
+    Tenure,
+    Factor
+)
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
 
@@ -63,6 +73,18 @@ def load_model():
 @st.cache_data
 def predict(_pipeline, X):
     return pipeline.predict(X)
+
+
+@st.cache_data
+def get_feat_importance(_pipeline):
+    features = _pipeline.feature_names_in_
+    importance = _pipeline[-1].feature_importances_.round(2) * 100
+    df_importance = pd.DataFrame({"Importance (%)": importance}, index=features)
+    df_importance = df_importance.reset_index(). \
+        rename({"index": "Feature"}, axis=1). \
+        sort_values(by="Importance (%)", ascending=False)
+    df_importance["Factor"] = df_importance["Feature"].apply(lambda x: Factor.format_factor(factor=x))
+    return df_importance
 
 
 @st.cache_data
@@ -384,3 +406,26 @@ if select_segment:
                 if etiquette_pos < nb_etiquettes:
                     col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
                     etiquette_pos += 1
+
+# =================== Turnover Factors ===================
+st.subheader("Turnover Factors", divider=True)
+st.write("This section highlights the factors that explain employee turnover the most.")
+df_importance = get_feat_importance(_pipeline=pipeline)
+
+chart = (
+    alt.Chart(df_importance)
+    .mark_bar(size=10)
+    .encode(
+        y=alt.X("Factor:N", axis=alt.Axis(orient="left")).sort("-x"),
+        x=alt.Y("Importance (%):Q", scale=alt.Scale(reverse=False)),
+        tooltip=alt.Tooltip(["Factor", "Importance (%)"])
+    )
+    .properties(width=800, height=300, title="Factor Importance")
+    .interactive()
+)
+
+st.altair_chart(chart)
+
+st.subheader("Turnover Factors", divider=True)
+st.write(
+    "These recommendations aim at supporting data-driven decisions to reduce employee turnover. They are generated automatically from the factors.")

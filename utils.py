@@ -71,6 +71,7 @@ class Tenure(Enum):
     BETWEEN_0_AND_2Y = 0, "Between 0 and 2 years"
     BETWEEN_3_AND_5Y = 1, "Between 3 and 5 years"
     FROM_6Y_AND_MORE = 2, "6 years and more"
+
     @staticmethod
     def format_tenure(tenure):
         if tenure <= 2:
@@ -92,6 +93,7 @@ class Perf(Enum):
     MIDDLE = 1, "Middle Performance"
     HIGH = 2, "High Performance"
     VERY_HIGH = 3, "Very High Performance"
+
     @staticmethod
     def format_perf(perf):
         if perf <= 0.5:
@@ -103,9 +105,8 @@ class Perf(Enum):
         return Perf.VERY_HIGH.formatted
 
 
-
-
 Perf._col_name = "perf_fmt"
+
 
 class Salary(Enum):
     def __init__(self, id, formatted):
@@ -123,6 +124,38 @@ class Salary(Enum):
 
 Salary._col_name = "salary_fmt"
 
+
+class Factor(Enum):
+    def __init__(self, id, raw, formatted):
+        self.id = id
+        self.raw = raw
+        self.formatted = formatted
+
+    SATISFACTION_LEVEL = 0, "satisfaction_level", "Satisfaction Level"
+    NUMBER_PROJECT = 1, "number_project", "Number of Projects"
+    TENURE = 2, "tenure", "Tenure"
+    AMH_X_LAST_EVAL = 3, "amh_x_last_eval", "Achiever Type (Nb hours worked x Performance)"
+    AVERAGE_MONTHLY_HOURS = 4, "average_monthly_hours", "Monthly Hours Worked",
+    LAST_EVALUATION = 5, "last_evaluation", "Performance"
+    WORK_ACCIDENT = 6, "work_accident", "Work Accident"
+    PROMOTION_LAST_5_YEARS = 7, "promotion_last_5years", "Promoted"
+
+    @staticmethod
+    def format_factor(factor):
+        return Factor._factors[factor]
+
+
+Factor._factors = {
+    "satisfaction_level": Factor.SATISFACTION_LEVEL.formatted,
+    "number_project": Factor.NUMBER_PROJECT.formatted,
+    "tenure": Factor.TENURE.formatted,
+    "amh_x_last_eval": Factor.AMH_X_LAST_EVAL.formatted,
+    "average_monthly_hours": Factor.AVERAGE_MONTHLY_HOURS.formatted,
+    "last_evaluation": Factor.LAST_EVALUATION.formatted,
+    "work_accident": Factor.WORK_ACCIDENT.formatted,
+    "promotion_last_5years": Factor.PROMOTION_LAST_5_YEARS.formatted,
+}
+
 segments = {
     # "Department": dept_map,
     "Department": Department,
@@ -130,7 +163,3 @@ segments = {
     "Performance": Perf,
     "Salary": Salary,
 }
-
-
-
-
