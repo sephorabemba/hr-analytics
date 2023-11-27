@@ -1,20 +1,11 @@
-import streamlit as st
+import altair as alt
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
+import streamlit as st
+
 from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, \
     Perf, Salary, Tenure
-import matplotlib.pyplot as plt
-import mpld3
-from mpld3 import plugins
-import streamlit.components.v1 as components
-import plotly.express as px
-import altair as alt
-import seaborn as sns
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import time
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
 
@@ -238,7 +229,6 @@ st.subheader("Risk by segment", divider=True)
 # department
 departments = df_test["department_fmt"].unique().tolist()
 departments = sorted(departments)
-departments
 
 # segments
 segments_to_select = segments.keys()
