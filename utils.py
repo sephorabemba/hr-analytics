@@ -64,12 +64,13 @@ Department._col_name = "department_fmt"
 
 
 class Tenure(Enum):
-    def __init__(self, id, raw, formatted):
-        self.id = id
-        self.raw = raw
+    def __init__(self, id, formatted):
+        self.id = id, id
         self.formatted = formatted
 
-    pass
+    BETWEEN_0_AND_2Y = 0, "Between 0 and 2 years"
+    BETWEEN_3_AND_5Y = 1, "Between 3 and 5 years"
+    FROM_6Y_AND_MORE = 2, "6 years and more"
 
 
 Tenure._col_name = "tenure_fmt"
@@ -80,3 +81,10 @@ segments = {
     "Tenure": Tenure,
 
 }
+
+def tenure_mapping(tenure):
+    if tenure <= 2:
+        return "Between 0 and 2 years"
+    if tenure <= 5:
+        return "Between 3 and 5 years"
+    return "6 years and more"

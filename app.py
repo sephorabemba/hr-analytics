@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
-from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments
+from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, tenure_mapping
 import matplotlib.pyplot as plt
 import mpld3
 from mpld3 import plugins
@@ -82,6 +82,11 @@ def load_datasets():
     df_train["department_fmt"] = df_train["department"].replace(dept_map)
     df_valid["department_fmt"] = df_valid["department"].replace(dept_map)
     df_test["department_fmt"] = df_test["department"].replace(dept_map)
+
+    # add tenure groups
+    df_train["tenure_fmt"] = df_train["tenure"].apply(lambda tenure: tenure_mapping(tenure))
+    df_valid["tenure_fmt"] = df_valid["tenure"].apply(lambda tenure: tenure_mapping(tenure))
+    df_test["tenure_fmt"] = df_test["tenure"].apply(lambda tenure: tenure_mapping(tenure))
 
     # rearrange cols
     cols = df_test.columns.tolist()
@@ -356,7 +361,7 @@ if select_segment:
             # get predicted turnovers by department
             segment_enum = segments[s]
             tr_by_segment = turnover_by_segment(segment_enum=segment_enum, df=df_test)
-            #tr_by_segment
+            tr_by_segment
 
             # display turnovers tn by dept
             etiquettes = format_etiquettes(tr_by_segment=tr_by_segment, segment_enum=segment_enum, col_delta="delta_prc")
@@ -367,10 +372,10 @@ if select_segment:
             etiquette_pos = 0
             for row_index in range(nb_rows):
                 col1, col2 = st.columns(2)
-                col1.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
+                if etiquette_pos < nb_etiquettes:
+                    col1.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
                 etiquette_pos += 1
-                col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
-                etiquette_pos += 1
-        else:
-            st.write("Can't find selected segment in mapping")
+                if etiquette_pos < nb_etiquettes:
+                    col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
+                    etiquette_pos += 1
 
