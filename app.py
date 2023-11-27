@@ -8,6 +8,11 @@ import mpld3
 from mpld3 import plugins
 import streamlit.components.v1 as components
 import plotly.express as px
+import altair as alt
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
 
@@ -129,10 +134,69 @@ turnover_train_pred, nb_trp = compute_turnover(y_labels=y_train_pred)
 turnover_test_actual, nb_tea = compute_turnover(y_labels=y_test)
 turnover_test_pred, nb_tep = compute_turnover(y_labels=y_test_pred)
 
+# ========== COMPARISON PREDICTED VS ACTUAL ==========
+st.subheader("Turnover rates Actual vs Predicted", divider=True)
 
-# ===== COMPARISON =====
+# column layout
+col_main, col_zoom = st.columns([0.6, 0.4])
+
 # TODO: simple dual bar chart over % with comparison with increase animation
-st.subheader("Turnover rates", divider=True)
+with col_main:
+    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
+    df_turnover = pd.DataFrame(
+        data=[[round(turnover_test_actual, 2), "Actual"], [round(turnover_test_pred, 2), "Algo prediction"]],
+        columns=["Turnover (%)", "Source"],
+    )
+    chart = (
+        alt.Chart(df_turnover)
+        .mark_bar(size=50)
+        .encode(
+            alt.X("Source:N", axis=alt.Axis(labelAngle=0)),
+            alt.Y("Turnover (%):Q"),
+            alt.Color("Source:N"),
+            alt.Tooltip(["Turnover (%)", "Source"]),
+        ).properties(
+            width=350,
+            height=400,
+            title="Turnover rates - Q3"
+        ).interactive()
+    )
+    st.altair_chart(chart)
+
+# =================== ZOOM ON PREDICTIONS ===================
+with col_zoom:
+    col_proportion = "Proportion (%)"
+    col_source = "Source"
+    #TODO: stacked bar plot with each proportions
+    df_zoom = pd.DataFrame(
+        data= [[ 80, "Well Predicted","Segment"],[ 8,"Safe marked as Leavers","Segment"], [12, "Missed Leavers","Segment"]],
+        columns=[col_proportion, col_source, "Group"]
+    ).sort_values(by=col_proportion, ascending=False)
+
+    # stacked by Source
+    domain = ["Well Predicted", "Safe marked as Leavers", "Missed Leavers"]
+    range_colors = ["#32a838", "#e8911e", "#e8251e"]
+    chart = (
+        alt.Chart(df_zoom)
+        .mark_bar(size=100)
+        .encode(
+            #x=alt.X("Group:N", axis=alt.Axis(labelAngle=0)),
+            y=alt.Y(f"{col_proportion}:Q"),
+            color=alt.Color(f"{col_source}:N", scale=alt.Scale(domain=domain, range=range_colors)),
+            tooltip=alt.Tooltip([col_proportion, col_source]),
+        ).properties(
+            width=300,
+            height=400,
+            title="Zoom on predictions"
+        ).interactive()
+    )
+    st.altair_chart(chart)
+
+
+
+
+
+
 
 st.text(f"Latest turnover data - Period Q2")
 st.text(f"{turnover_train_actual:.2f}")
@@ -153,11 +217,11 @@ comparison = compare_turnover(
 )
 st.text(comparison)
 
-# ===== TRENDS =====
+# ========== TRENDS ==========
 # add graph interactive with prediction point vs actual and show trend
 chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
 
-turnover_q1_actual = 15 # dummy
+turnover_q1_actual = 15  # dummy
 df_trend_actual = pd.Series([15, 14.6, turnover_test_actual], name="Actual trend")
 df_trend_predict = pd.Series([15, 14.6, turnover_test_pred], name="Predicted trend")
 df_trend = pd.concat([df_trend_actual, df_trend_predict], axis=1)
@@ -175,5 +239,4 @@ fig.update_layout(
     height=800,
 )
 st.plotly_chart(fig, use_container_width=True)
-#st.line_chart(df_trend)
-
+# st.line_chart(df_trend)
