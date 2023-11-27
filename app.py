@@ -2,8 +2,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
-from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, tenure_mapping, \
-    perf_mapping
+from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments, \
+    Perf, Salary, Tenure
 import matplotlib.pyplot as plt
 import mpld3
 from mpld3 import plugins
@@ -86,14 +86,19 @@ def load_datasets():
     df_test["department_fmt"] = df_test["department"].replace(dept_map)
 
     # add tenure groups
-    df_train["tenure_fmt"] = df_train["tenure"].apply(lambda tenure: tenure_mapping(tenure))
-    df_valid["tenure_fmt"] = df_valid["tenure"].apply(lambda tenure: tenure_mapping(tenure))
-    df_test["tenure_fmt"] = df_test["tenure"].apply(lambda tenure: tenure_mapping(tenure))
+    df_train["tenure_fmt"] = df_train["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
+    df_valid["tenure_fmt"] = df_valid["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
+    df_test["tenure_fmt"] = df_test["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
 
     # add perf groups
-    df_train["perf_fmt"] = df_train["last_evaluation"].apply(lambda perf: perf_mapping(perf))
-    df_valid["perf_fmt"] = df_valid["last_evaluation"].apply(lambda perf: perf_mapping(perf))
-    df_test["perf_fmt"] = df_test["last_evaluation"].apply(lambda perf: perf_mapping(perf))
+    df_train["perf_fmt"] = df_train["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
+    df_valid["perf_fmt"] = df_valid["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
+    df_test["perf_fmt"] = df_test["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
+
+    # add formatted salary
+    df_train["salary_fmt"] = df_valid["salary"].apply(lambda salary: Salary.format_salary(salary))
+    df_valid["salary_fmt"] = df_valid["salary"].apply(lambda salary: Salary.format_salary(salary))
+    df_test["salary_fmt"] = df_test["salary"].apply(lambda salary: Salary.format_salary(salary))
 
     # rearrange cols
     cols = df_test.columns.tolist()

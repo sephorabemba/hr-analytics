@@ -71,6 +71,13 @@ class Tenure(Enum):
     BETWEEN_0_AND_2Y = 0, "Between 0 and 2 years"
     BETWEEN_3_AND_5Y = 1, "Between 3 and 5 years"
     FROM_6Y_AND_MORE = 2, "6 years and more"
+    @staticmethod
+    def format_tenure(tenure):
+        if tenure <= 2:
+            return "Between 0 and 2 years"
+        if tenure <= 5:
+            return "Between 3 and 5 years"
+        return "6 years and more"
 
 
 Tenure._col_name = "tenure_fmt"
@@ -81,35 +88,49 @@ class Perf(Enum):
         self.id = id, id
         self.formatted = formatted
 
-    LOW = 0, "Low"
-    MIDDLE = 1, "Middle"
-    HIGH = 2, "High"
-    VERY_HIGH = 3, "Very High"
+    LOW = 0, "Low Performance"
+    MIDDLE = 1, "Middle Performance"
+    HIGH = 2, "High Performance"
+    VERY_HIGH = 3, "Very High Performance"
+    @staticmethod
+    def format_perf(perf):
+        if perf <= 0.5:
+            return Perf.LOW.formatted
+        if perf <= 0.7:
+            return Perf.MIDDLE.formatted
+        if perf <= 0.9:
+            return Perf.HIGH.formatted
+        return Perf.VERY_HIGH.formatted
+
+
 
 
 Perf._col_name = "perf_fmt"
+
+class Salary(Enum):
+    def __init__(self, id, formatted):
+        self.id = id, id
+        self.formatted = formatted
+
+    LOW = 0, "Low Salary"
+    MEDIUM = 1, "Medium Salary"
+    HIGH = 2, "High Salary"
+
+    @staticmethod
+    def format_salary(salary):
+        return f"{salary.capitalize()} Salary"
+
+
+Salary._col_name = "salary_fmt"
 
 segments = {
     # "Department": dept_map,
     "Department": Department,
     "Tenure": Tenure,
     "Performance": Perf,
+    "Salary": Salary,
 }
 
 
-def tenure_mapping(tenure):
-    if tenure <= 2:
-        return "Between 0 and 2 years"
-    if tenure <= 5:
-        return "Between 3 and 5 years"
-    return "6 years and more"
 
 
-def perf_mapping(perf):
-    if perf <= 0.5:
-        return "Low"
-    if perf <= 0.7:
-        return "Middle"
-    if perf <= 0.9:
-        return "High"
-    return "Very High"
