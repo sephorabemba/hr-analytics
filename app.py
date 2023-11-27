@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
-from utils import train_filepath, valid_filepath, test_filepath, model_filepath
+from utils import train_filepath, valid_filepath, test_filepath, model_filepath, dept_map, segments
 import matplotlib.pyplot as plt
 import mpld3
 from mpld3 import plugins
@@ -13,6 +13,7 @@ import seaborn as sns
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import time
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
 
@@ -78,6 +79,17 @@ def load_datasets():
     df_valid = pd.read_csv(valid_filepath)
     df_test = pd.read_csv(test_filepath)
 
+    df_train["department_fmt"] = df_train["department"].replace(dept_map)
+    df_valid["department_fmt"] = df_valid["department"].replace(dept_map)
+    df_test["department_fmt"] = df_test["department"].replace(dept_map)
+
+    # rearrange cols
+    cols = df_test.columns.tolist()
+    cols.pop(cols.index("left"))
+    df_train = df_train[cols + ["left"]]
+    df_valid = df_valid[cols + ["left"]]
+    df_test = df_test[cols + ["left"]]
+
     return df_train, df_valid, df_test
 
 
@@ -139,7 +151,7 @@ st.subheader("Turnover rates Actual vs Predicted", divider=True)
 txt_period = "**Period:** Q3"
 txt_workforce = f"**Workforce size:** {len(y_test)}"
 
-col_period, col_workforce = st.columns([0.15,0.85])
+col_period, col_workforce = st.columns([0.15, 0.85])
 with col_period:
     st.markdown(txt_period)
 with col_workforce:
@@ -176,9 +188,10 @@ with col_zoom:
     col_proportion = "Proportion (%)"
     col_source = "Source"
     col_group = "Predictions Breakdown"
-    #TODO: stacked bar plot with each proportions
+    # TODO: stacked bar plot with each proportions
     df_zoom = pd.DataFrame(
-        data= [[ 80, "Well Predicted","Segment"],[ 8,"Safe marked as Leavers","Segment"], [12, "Missed Leavers","Segment"]],
+        data=[[80, "Well Predicted", "Segment"], [8, "Safe marked as Leavers", "Segment"],
+              [12, "Missed Leavers", "Segment"]],
         columns=[col_proportion, col_source, col_group]
     ).sort_values(by=col_proportion, ascending=False)
 
@@ -200,4 +213,164 @@ with col_zoom:
         ).interactive()
     )
     st.altair_chart(chart)
+
+# ===================RISK BY SEGMENT ===================
+# segments P1: department, tenure
+st.subheader("Risk by segment", divider=True)
+
+# department
+departments = df_test["department_fmt"].unique().tolist()
+departments = sorted(departments)
+departments
+
+# segments
+segments_to_select = segments.keys()
+select_segment = st.selectbox(
+    label="Select the segment to analyze",
+    options=segments_to_select
+
+)
+
+
+def turnover_by_segment(segment_enum, df):
+    # eg segment_str = Department, segment_enum = class Dept
+
+    # loop through
+
+    # count
+    # segment_group = df.groupby([segment_enum._col_name, "left"])[segment_enum._col_name, "left"].agg( {"left": "sum", segment_enum._col_name: "count"})
+
+    # segment_group = df.groupby([segment_enum._col_name, "left"]).agg(
+    #   {"left": "count", segment_enum._col_name: "count"})
+
+    # isolate group by multi-index series with counts. Cf. L0 +++
+    gb = df.groupby([segment_enum._col_name, "left"]).size()
+    # create df with counts only
+    df_segment = gb.to_frame("count")
+    # add proportions using the multi-index series of counts -> degroup up to the salary group level then get sum()
+    df_segment["proportion"] = round(gb / gb.groupby(level=0).sum() * 100, 2)
+    df_segment = df_segment.reset_index()
+
+    # keep turnover data only
+    df_turnover = df_segment[df_segment["left"] == 1]
+    df_turnover["mean_segment"] = df_turnover["proportion"].sum() / len(df_turnover)
+
+    # compute delta compared to average segment turnover
+    df_turnover["delta_prc"] = round(-(1 - df_turnover["proportion"] / df_turnover["mean_segment"]) * 100, 2)
+
+    return df_turnover
+
+
+def build_etiquette_style(risky):
+    color = "red" if risky else "green"
+    etiquette_body = """
+                border: 2px solid;
+                border-color: {border_color};
+                border-radius: 8px;
+                padding: 10px;
+                margin-bottom: 2px;
+"""
+    etiquette_body = etiquette_body.format(border_color=color)
+
+    segment_cat_body = """
+                font-weight: bold;
+                color: {cat_color};
+    """
+    segment_cat_body = segment_cat_body.format(cat_color=color)
+
+    start = """
+        <style>
+            .etiquette_risky {
+""" if risky else """
+        <style>
+            .etiquette_safe {
+"""
+    cat_label = """
+            }
+            .segment_cat_risky {
+    """ if risky else """
+            }
+            .segment_cat_safe {
+    """
+    end = """
+            }
+        </style>
+    """
+
+    return start + etiquette_body + cat_label + segment_cat_body + end
+
+
+def format_etiquette(segment_cat, delta):
+    #
+    risky  = delta > 0
+    if risky:
+        # risky
+        comp = "more"
+        segment_cat_class = "segment_cat_risky"
+        etiquette_class = "etiquette_risky"
+    else:
+        # safe
+        comp = "less"
+        delta = -delta
+
+        segment_cat_class = "segment_cat_safe"
+        etiquette_class = "etiquette_safe"
+    style = build_etiquette_style( risky=risky)
+
+    # add text in html
+    etiquette_txt = f"""
+<div class= '{etiquette_class}'>
+    <p class='{segment_cat_class}'>{segment_cat}</p
+    <p>{delta}% {comp} than the average turnover rate</p>
+</div>
+"""
+    etiquette_fmt = style + etiquette_txt
+    return etiquette_fmt
+
+def format_etiquettes(tr_by_segment, segment_enum, col_delta):
+    """
+
+    :return:
+    """
+    col_segment = segment_enum._col_name
+    df_cols = ["category", "delta_prc", "etiquette"]
+    df_etiquettes = pd.DataFrame(columns=df_cols)
+    df_list = list()
+    for segment in segment_enum:
+        # get category and delta value
+        category = segment.formatted
+        delta = tr_by_segment.loc[ tr_by_segment[col_segment] == category, col_delta ].values.tolist()[0]
+        etiquette = format_etiquette(segment_cat=category, delta=delta)
+        df_list.append(pd.DataFrame( [[category, delta, etiquette ]], columns = df_cols, index=[0]))
+
+    # order etiquettes by delta
+    df_etiquettes = pd.concat( df_list, axis=0)
+    df_etiquettes = df_etiquettes.sort_values(by="delta_prc", ascending=False)
+    etiquettes = df_etiquettes["etiquette"].values.tolist()
+    return etiquettes
+
+if select_segment:
+    # get corresponding enum object
+    for s in segments_to_select:
+        if select_segment == s:
+            # get predicted turnovers by department
+            segment_enum = segments[s]
+            tr_by_segment = turnover_by_segment(segment_enum=segment_enum, df=df_test)
+            #tr_by_segment
+
+            # display turnovers tn by dept
+            etiquettes = format_etiquettes(tr_by_segment=tr_by_segment, segment_enum=segment_enum, col_delta="delta_prc")
+            nb_etiquettes = len(etiquettes)
+            nb_cols = 2
+            nb_rows = int(np.ceil(nb_etiquettes/nb_cols))
+            # create nb_cols columns nb_rows times
+            etiquette_pos = 0
+            for row_index in range(nb_rows):
+                col1, col2 = st.columns(2)
+                col1.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
+                etiquette_pos += 1
+                col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
+                etiquette_pos += 1
+        else:
+            st.write("Can't find selected segment in mapping")
 
