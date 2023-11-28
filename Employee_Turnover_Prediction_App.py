@@ -1,24 +1,25 @@
 import altair as alt
-import joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
+from cache.cache import load_full_data, load_model
 
-from utils import (
-    train_filepath,
-    valid_filepath,
-    test_filepath,
-    model_filepath,
-    dept_map,
+from utils.utils import (
     segments,
-    Perf,
-    Salary,
-    Tenure,
     Factor,
     recos_filepath,
 )
 
+st.set_page_config(
+    page_title="Employee Turnover Prediction App",
+    page_icon="💼",
+)
+
+st.sidebar.success("Select a demo from the sidebar")
+
 st.title("🔍 Employee turnover analysis 👩‍💼")
+
+st.write("Select a demo from the sidebar!")
 
 st.subheader("What is this app?", divider=True)
 
@@ -66,16 +67,6 @@ https://www.kaggle.com/datasets/mfaisalqureshi/hr-analytics-and-job-prediction).
 st.markdown(summary)
 
 
-@st.cache_resource
-def load_model():
-    return joblib.load(filename=model_filepath)
-
-
-@st.cache_data
-def predict(_pipeline, X):
-    return pipeline.predict(X)
-
-
 @st.cache_data
 def get_feat_importance(_pipeline):
     features = _pipeline.feature_names_in_
@@ -90,67 +81,9 @@ def get_feat_importance(_pipeline):
 
 
 @st.cache_data
-def load_datasets():
-    df_train = pd.read_csv(train_filepath)
-    df_valid = pd.read_csv(valid_filepath)
-    df_test = pd.read_csv(test_filepath)
-
-    # add formatted department
-    df_train["department_fmt"] = df_train["department"].replace(dept_map)
-    df_valid["department_fmt"] = df_valid["department"].replace(dept_map)
-    df_test["department_fmt"] = df_test["department"].replace(dept_map)
-
-    # add tenure groups
-    df_train["tenure_fmt"] = df_train["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
-    df_valid["tenure_fmt"] = df_valid["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
-    df_test["tenure_fmt"] = df_test["tenure"].apply(lambda tenure: Tenure.format_tenure(tenure))
-
-    # add perf groups
-    df_train["perf_fmt"] = df_train["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
-    df_valid["perf_fmt"] = df_valid["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
-    df_test["perf_fmt"] = df_test["last_evaluation"].apply(lambda perf: Perf.format_perf(perf=perf))
-
-    # add formatted salary
-    df_train["salary_fmt"] = df_valid["salary"].apply(lambda salary: Salary.format_salary(salary))
-    df_valid["salary_fmt"] = df_valid["salary"].apply(lambda salary: Salary.format_salary(salary))
-    df_test["salary_fmt"] = df_test["salary"].apply(lambda salary: Salary.format_salary(salary))
-
-    # rearrange cols
-    cols = df_test.columns.tolist()
-    cols.pop(cols.index("left"))
-    df_train = df_train[cols + ["left"]]
-    df_valid = df_valid[cols + ["left"]]
-    df_test = df_test[cols + ["left"]]
-
-    return df_train, df_valid, df_test
-
-
-@st.cache_data
 def load_recos():
     df_reco = pd.read_csv(recos_filepath)
     return df_reco
-
-
-@st.cache_data
-def get_feats_targets():
-    X_train = df_train.iloc[:, :-1]
-    y_train = df_train.iloc[:, -1]
-    X_valid = df_valid.iloc[:, :-1]
-    y_valid = df_valid.iloc[:, -1]
-    X_test = df_test.iloc[:, :-1]
-    y_test = df_test.iloc[:, -1]
-    return X_train, y_train, X_valid, y_valid, X_test, y_test
-
-
-@st.cache_data
-def compute_turnover(y_labels):
-    """
-
-    :return:
-    """
-    turnover_nb = y_labels.sum()
-    turnover_prc = turnover_nb / len(y_labels) * 100
-    return turnover_prc, turnover_nb
 
 
 @st.cache_data
@@ -170,90 +103,26 @@ def compare_turnover(turnover_actual, turnover_pred, turnover_count_actual, turn
 
 # ======= MAIN =======
 
+dict_data = load_full_data()
 # load and prepare data
-df_train, df_valid, df_test = load_datasets()
-X_train, y_train, X_valid, y_valid, X_test, y_test = get_feats_targets()
+if "dict_data" not in st.session_state:
+    st.session_state['dict_data'] = dict_data
+
+df_train, df_valid, df_test = dict_data["df_train"], dict_data["df_valid"], dict_data["df_test"]
+X_train, y_train, X_valid, y_valid, X_test, y_test = (
+    dict_data["X_train"],
+    dict_data["y_train"],
+    dict_data["X_valid"],
+    dict_data["y_valid"],
+    dict_data["X_test"],
+    dict_data["y_test"],
+)
 pipeline = load_model()
+
 st.dataframe(df_test)
 
 # load recommendations
 df_reco = load_recos()
-
-# predict
-y_train_pred = predict(_pipeline=pipeline, X=X_train)
-y_test_pred = predict(_pipeline=pipeline, X=X_test)
-turnover_train_actual, nb_tra = compute_turnover(y_labels=y_train)
-turnover_train_pred, nb_trp = compute_turnover(y_labels=y_train_pred)
-turnover_test_actual, nb_tea = compute_turnover(y_labels=y_test)
-turnover_test_pred, nb_tep = compute_turnover(y_labels=y_test_pred)
-
-# ========== COMPARISON PREDICTED VS ACTUAL ==========
-st.subheader("Turnover rates Actual vs Predicted", divider=True)
-txt_period = "**Period:** Q3"
-txt_workforce = f"**Workforce size:** {len(y_test)}"
-
-col_period, col_workforce = st.columns([0.15, 0.85])
-with col_period:
-    st.markdown(txt_period)
-with col_workforce:
-    st.markdown(txt_workforce)
-
-# column layout
-col_main, col_zoom = st.columns([0.5, 0.5])
-
-# TODO: simple dual bar chart over % with comparison with increase animation
-with col_main:
-    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
-    df_turnover = pd.DataFrame(
-        data=[[round(turnover_test_actual, 2), "Actual"], [round(turnover_test_pred, 2), "Algo predictions"]],
-        columns=["Turnover (%)", "Source"],
-    )
-    chart = (
-        alt.Chart(df_turnover)
-        .mark_bar(size=50)
-        .encode(
-            alt.X("Source:N", axis=alt.Axis(labelAngle=0)),
-            alt.Y("Turnover (%):Q"),
-            alt.Color("Source:N"),
-            alt.Tooltip(["Turnover (%)", "Source"]),
-        ).properties(
-            width=350,
-            height=400,
-            title="Turnover rates"
-        ).interactive()
-    )
-    st.altair_chart(chart)
-
-# =================== ZOOM ON PREDICTIONS ===================
-with col_zoom:
-    col_proportion = "Proportion (%)"
-    col_source = "Source"
-    col_group = "Predictions Breakdown"
-    # TODO: stacked bar plot with each proportions
-    df_zoom = pd.DataFrame(
-        data=[[80, "Well Predicted", "Segment"], [8, "Safe marked as Leavers", "Segment"],
-              [12, "Missed Leavers", "Segment"]],
-        columns=[col_proportion, col_source, col_group]
-    ).sort_values(by=col_proportion, ascending=False)
-
-    # stacked by Source
-    domain = ["Well Predicted", "Safe marked as Leavers", "Missed Leavers"]
-    range_colors = ["#32a838", "#e8911e", "#e8251e"]
-    chart = (
-        alt.Chart(df_zoom)
-        .mark_bar(size=100)
-        .encode(
-            x=alt.X(f"{col_group}:N", axis=alt.Axis(labelAngle=0)),
-            y=alt.Y(f"{col_proportion}:Q"),
-            color=alt.Color(f"{col_source}:N", scale=alt.Scale(domain=domain, range=range_colors)),
-            tooltip=alt.Tooltip([col_proportion, col_source]),
-        ).properties(
-            width=300,
-            height=400,
-            title="Zoom on algo predictions"
-        ).interactive()
-    )
-    st.altair_chart(chart)
 
 # ===================RISK BY SEGMENT ===================
 # segments P1: department, tenure
