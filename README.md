@@ -38,7 +38,7 @@ The dataset has 9 columns and 1 categorical target `left`.
 
 The dataset is imbalanced with a turnover of 16.6%.
 
-[Pie chart of the target variable]("https://github.com/sephorabemba/hr-analytics/blob/main/img/es-left-pie.png")
+<img src="img/es-pie.png" width="400" height="350">
 
 ## Modeling and Evaluation
 
@@ -63,7 +63,7 @@ We picked the `average precision` as our main evaluation metric for the followin
 
 Employee satisfaction, work load, tenure and performance evaluation strongly impact employee turnover.
 
-[Feature importance](https://github.com/sephorabemba/hr-analytics/blob/main/img/es-importance.png)
+<img src="img/es-importance.png" width="500" height="350">
 
 The leadership team should put in place actions to tackle these areas. Here are a few data-driven recommendations:
 
@@ -79,7 +79,7 @@ We've created a Streamlit App to:
 
 **Try it out below!**
 
-[Streamlit demo](https://github.com/sephorabemba/hr-analytics/blob/main/img/es-streamlit.png)
+![Streamlit demo](img/es-streamlit.png)
 
 ## Run the Streamlit Demo
 
