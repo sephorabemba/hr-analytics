@@ -1,8 +1,15 @@
-import streamlit as st
-import pandas as pd
 import altair as alt
-from cache.cache import load_full_data, compute_turnover, predict, load_model
+import pandas as pd
+import streamlit as st
 
+from cache.dataset import load_full_data
+from cache.model import predict, load_model
+from utils.turnover_calculator import compute_turnover
+
+st.set_page_config(
+    page_title="Turnover Rates",
+    page_icon="📈"
+)
 
 dict_data = load_full_data()
 if "dict_data" not in st.session_state:
@@ -11,9 +18,9 @@ if "dict_data" not in st.session_state:
 
 pipeline = load_model()
 
-X_train =  dict_data["X_train"]
+X_train = dict_data["X_train"]
 y_train = dict_data["y_train"]
-X_test =  dict_data["X_test"]
+X_test = dict_data["X_test"]
 y_test = dict_data["y_test"]
 
 # predict

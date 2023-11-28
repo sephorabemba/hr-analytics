@@ -1,6 +1,3 @@
-import altair as alt
-import joblib
-import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -8,16 +5,11 @@ from utils.utils import (
     train_filepath,
     valid_filepath,
     test_filepath,
-    model_filepath,
     dept_map,
-    segments,
     Perf,
     Salary,
     Tenure,
-    Factor,
-    recos_filepath,
 )
-
 
 
 @st.cache_data
@@ -84,25 +76,3 @@ def load_full_data():
         "y_test": y_test,
     }
     return dict_data
-
-@st.cache_resource
-def load_model():
-    return joblib.load(filename=model_filepath)
-
-@st.cache_data
-def predict(_pipeline, X):
-    return _pipeline.predict(X)
-
-
-@st.cache_data
-def compute_turnover(y_labels):
-    """
-
-    :return:
-    """
-    turnover_nb = y_labels.sum()
-    turnover_prc = turnover_nb / len(y_labels) * 100
-    return turnover_prc, turnover_nb
-
-
-
