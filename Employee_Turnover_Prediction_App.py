@@ -44,12 +44,6 @@ uncover its main factors and make recommendations on how to reduce employee turn
 ### The approach
 The data team has thoroughly analyzed the survey data and has come up with a HR analytics software powered with AI to
 solve this business problem (*Use 55 template*).
-
-### Techniques used:
-- Exploratory Data Analysis: Python, scikit learn
-- Machine Learning modeling: Gradient Boosting algorithm
-- Web app development & deployment: Streamlit, Streamlit Cloud
-
 """
 
 st.markdown(overview)
