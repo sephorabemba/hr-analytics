@@ -1,0 +1,25 @@
+id_factor,label,reco
+0,Satisfaction_Level,Implement regular employee feedback sessions to address concerns and improve job satisfaction.
+0,Satisfaction_Level,Provide professional development opportunities and clear career paths.
+0,Satisfaction_Level,Introduce flexible work arrangements for better work-life balance.
+1,Number_of_Projects,Regularly assess and adjust workload expectations.
+1,Number_of_Projects,Provide robust project management support and tools.
+1,Number_of_Projects,Foster a collaborative work environment for effective task distribution.
+2,Tenure,Develop individualized career development plans.
+2,Tenure,Implement employee recognition programs and tenure awards.
+2,Tenure,Establish mentorship and leadership programs for internal growth.
+3,Achiever_Type,(Number of Hours Worked x Performance) Emphasize a results-oriented culture.
+3,Achiever_Type,Encourage work-life balance and avoid glorifying overwork.
+3,Achiever_Type,Introduce performance-based incentive programs.
+4,Average_Monthly_Hours_Worked,Offer flexible scheduling options.
+4,Average_Monthly_Hours_Worked,Regularly monitor and adjust workloads to prevent burnout.
+4,Average_Monthly_Hours_Worked,Promote a culture that encourages breaks and time off for better well-being.
+5,Performance_Evaluation,Clearly communicate evaluation criteria.
+5,Performance_Evaluation,Conduct regular feedback sessions throughout the year.
+5,Performance_Evaluation,Use evaluations to create individualized development plans.
+6,Work_Accident,Prioritize safety with comprehensive training programs and protocols.
+6,Work_Accident,Conduct regular safety audits and inspections.
+6,Work_Accident,Implement employee wellness programs for overall well-being.
+7,Promotions,Implement merit-based promotion policies.
+7,Promotions,Develop internal talent through training and mentorship.
+7,Promotions,Clearly define and communicate transparent career paths within the organization.

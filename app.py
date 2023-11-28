@@ -14,7 +14,8 @@ from utils import (
     Perf,
     Salary,
     Tenure,
-    Factor
+    Factor,
+    recos_filepath,
 )
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
@@ -82,7 +83,8 @@ def get_feat_importance(_pipeline):
     df_importance = pd.DataFrame({"Importance (%)": importance}, index=features)
     df_importance = df_importance.reset_index(). \
         rename({"index": "Feature"}, axis=1). \
-        sort_values(by="Importance (%)", ascending=False)
+        sort_values(by="Importance (%)", ascending=False).reset_index(drop=True).reset_index().rename({"index": "rank"},
+                                                                                                      axis=1)
     df_importance["Factor"] = df_importance["Feature"].apply(lambda x: Factor.format_factor(factor=x))
     return df_importance
 
@@ -121,6 +123,12 @@ def load_datasets():
     df_test = df_test[cols + ["left"]]
 
     return df_train, df_valid, df_test
+
+
+@st.cache_data
+def load_recos():
+    df_reco = pd.read_csv(recos_filepath)
+    return df_reco
 
 
 @st.cache_data
@@ -167,6 +175,9 @@ df_train, df_valid, df_test = load_datasets()
 X_train, y_train, X_valid, y_valid, X_test, y_test = get_feats_targets()
 pipeline = load_model()
 st.dataframe(df_test)
+
+# load recommendations
+df_reco = load_recos()
 
 # predict
 y_train_pred = predict(_pipeline=pipeline, X=X_train)
@@ -290,71 +301,154 @@ def turnover_by_segment(segment_enum, df):
     return df_turnover
 
 
-def build_etiquette_style(risky):
-    color = "red" if risky else "green"
+def build_etiquette_style(risky=None, top=None, section="Segmentation"):
+    # common to all sections
+    if risky is not None:
+        color = "red" if risky else "green"
+    else:
+        color = "green" if top else "black"
     etiquette_body = """
                 border: 2px solid;
                 border-color: {border_color};
                 border-radius: 8px;
                 padding: 10px;
                 margin-bottom: 2px;
-"""
-    etiquette_body = etiquette_body.format(border_color=color)
+    """
 
     segment_cat_body = """
-                font-weight: bold;
-                color: {cat_color};
+                        font-weight: bold;
+                        color: {cat_color};
     """
     segment_cat_body = segment_cat_body.format(cat_color=color)
 
+    end = """
+                    }
+                </style>
+            """
+
+    # for segmentation section only
+    etiquette_body = etiquette_body.format(border_color=color)
+    if section == "Segmentation":
+        start = """
+            <style>
+                .etiquette_risky {
+    """ if risky else """
+            <style>
+                .etiquette_safe {
+    """
+        cat_label = """
+                }
+                .segment_cat_risky {
+        """ if risky else """
+                }
+                .segment_cat_safe {
+        """
+        return start + etiquette_body + cat_label + segment_cat_body + end
+
+    # for Recommendations section only
+    # build style for Reco etiquette
     start = """
-        <style>
-            .etiquette_risky {
-""" if risky else """
-        <style>
-            .etiquette_safe {
-"""
+                <style>
+                    .etiquette_top {
+        """ if top else """
+                <style>
+                    .etiquette_basic {
+        """
     cat_label = """
             }
-            .segment_cat_risky {
-    """ if risky else """
+            .segment_cat_top {
+    """ if top else """
             }
-            .segment_cat_safe {
+            .segment_cat_basic {
     """
-    end = """
-            }
-        </style>
-    """
-
     return start + etiquette_body + cat_label + segment_cat_body + end
 
 
-def format_etiquette(segment_cat, delta):
+def format_etiquette(segment_cat, delta=None, rank=None, reco_block=None):
+    """Format a single etiquette
+
+    :param segment_cat:
+    :param delta:
+    :param top:
+    :param reco_block:
+    :return:
+    """
     #
-    risky = delta > 0
-    if risky:
-        # risky
-        comp = "more"
-        segment_cat_class = "segment_cat_risky"
-        etiquette_class = "etiquette_risky"
+    comp = None
+    style = None
+    top_msg = ""
+    if delta is not None:
+        risky = delta > 0
+        if risky:
+            # risky
+            comp = "more"
+            segment_cat_class = "segment_cat_risky"
+            etiquette_class = "etiquette_risky"
+        else:
+            # safe
+            comp = "less"
+            delta = -delta
+
+            segment_cat_class = "segment_cat_safe"
+            etiquette_class = "etiquette_safe"
+        style = build_etiquette_style(risky=risky)
+        # prepare message body
+        msg = f"<p>{delta}% {comp} than the average turnover rate</p>"
+    elif rank is not None:
+        top = rank <= 3
+        if top:
+            segment_cat_class = "segment_cat_top"
+            etiquette_class = "etiquette_top"
+        else:
+            segment_cat_class = "segment_cat_basic"
+            etiquette_class = "etiquette_basic"
+        style = build_etiquette_style(risky=None, top=top, section="Reco")
+        msg = reco_block
+        top_msg = f" - Top #{rank} factor"
     else:
-        # safe
-        comp = "less"
-        delta = -delta
-
-        segment_cat_class = "segment_cat_safe"
-        etiquette_class = "etiquette_safe"
-    style = build_etiquette_style(risky=risky)
-
-    # add text in html
+        print("Error, delta or top must be not null")
+    # build etiquette block
     etiquette_txt = f"""
 <div class= '{etiquette_class}'>
-    <p class='{segment_cat_class}'>{segment_cat}</p
-    <p>{delta}% {comp} than the average turnover rate</p>
+    <p class='{segment_cat_class}'>{segment_cat}{top_msg}</p>{msg}
 </div>
 """
     etiquette_fmt = style + etiquette_txt
+    etiquette_fmt = etiquette_fmt.strip()
     return etiquette_fmt
+
+
+def format_etiquettes_recos(df_reco, df_importance):
+    # get unique factor ids
+    ids = df_reco["id_factor"].unique().tolist()
+    # get corresponding formatted names
+    fmt_factors = Factor.ids_to_formatted(ids)
+
+    start = "<ul>"
+    end = "</ul>"
+    etiquettes = list()
+    for fmt_factor in fmt_factors:
+        # get all recos for given factor as a list
+        recos = df_reco.loc[df_reco["factor_fmt"] == fmt_factor, "reco"].tolist()
+        reco_html = start
+        # add recos as html
+        for reco in recos:
+            reco_html += "<li>" + reco + "</li>"
+        reco_html += end
+
+        # get single factor importance rank
+        # df_importance.apply(lambda row: row["Factor"])
+        # rank = df_reco[df_importance["Factor"] == fmt_factor]["rank"].values.tolist()[0]
+        rank = df_importance[df_importance["Factor"] == fmt_factor]["rank"].values.tolist()[0]
+        # add 1 for display
+        rank += 1
+        # format etiquette
+        etiquette = format_etiquette(segment_cat=fmt_factor, delta=None, rank=rank, reco_block=reco_html)
+
+        # add to block list
+        etiquettes.append(etiquette)
+
+    return etiquettes
 
 
 def format_etiquettes(tr_by_segment, segment_enum, col_delta):
@@ -426,6 +520,33 @@ chart = (
 
 st.altair_chart(chart)
 
-st.subheader("Turnover Factors", divider=True)
+# =================== Recommendations ===================
+
+st.subheader("Recommendations", divider=True)
 st.write(
-    "These recommendations aim at supporting data-driven decisions to reduce employee turnover. They are generated automatically from the factors.")
+    "These recommendations aim at supporting data-driven decisions to "
+    "reduce employee turnover. Generated with ChatGPT."
+)
+
+factors_to_select = sorted(Factor.get_factor_formatted())
+factors_selected = st.multiselect(
+    label="Choose 1 or more factors",
+    options=factors_to_select,
+    default=None,
+)
+
+if factors_selected:
+    # df_reco
+    # get factor ids
+    factor_ids = Factor.ids_from_formatted(factors_selected)
+    # select targeted reco lines only
+    mask = df_reco["id_factor"].isin(factor_ids)
+    reco_selected = df_reco[mask]
+    reco_selected["factor_fmt"] = reco_selected["id_factor"].apply(lambda id: Factor.id_to_formatted(id))
+    reco_selected
+
+    # format etiquettes for each factor
+    etiquettes = format_etiquettes_recos(df_reco=reco_selected, df_importance=df_importance)
+    # show etiquettes
+    for e in etiquettes:
+        st.markdown(e, unsafe_allow_html=True)

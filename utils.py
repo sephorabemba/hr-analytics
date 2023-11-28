@@ -16,11 +16,15 @@ brf_filename = "balanced_random_forest.joblib"
 gb_filename = "gradient_boosting.joblib"
 adaboost_filename = "adaboost.joblib"
 lr_filename = "logistic_regression.joblib"
+recos_filename = "recos.csv"
 
 # dataset file paths
 train_filepath = f"{root}/{data_folder}/{train_filename}"
 valid_filepath = f"{root}/{data_folder}/{valid_filename}"
 test_filepath = f"{root}/{data_folder}/{test_filename}"
+
+# recos
+recos_filepath = f"{root}/{data_folder}/{recos_filename}"
 
 # models
 model_filepath = f"{root}/{models_folder}/{gb_filename}"
@@ -144,7 +148,37 @@ class Factor(Enum):
     def format_factor(factor):
         return Factor._factors[factor]
 
+    @staticmethod
+    def get_factor_raw():
+        return [factor.raw for factor in Factor]
 
+    @staticmethod
+    def get_factor_formatted():
+        return [factor.formatted for factor in Factor]
+
+    @staticmethod
+    def ids_from_formatted(fmt_factors):
+        return [factor.id for factor in Factor for formatted in fmt_factors if factor.formatted == formatted]
+
+    @staticmethod
+    def id_to_formatted(id):
+        return Factor._id_formatted[id]
+
+    @staticmethod
+    def ids_to_formatted(ids):
+        return [factor.formatted for factor in Factor for id in ids if factor.id == id]
+
+
+Factor._id_formatted = {
+    0: Factor.SATISFACTION_LEVEL.formatted,
+    1: Factor.NUMBER_PROJECT.formatted,
+    2: Factor.TENURE.formatted,
+    3: Factor.AMH_X_LAST_EVAL.formatted,
+    4: Factor.AVERAGE_MONTHLY_HOURS.formatted,
+    5: Factor.LAST_EVALUATION.formatted,
+    6: Factor.WORK_ACCIDENT.formatted,
+    7: Factor.PROMOTION_LAST_5_YEARS.formatted,
+}
 Factor._factors = {
     "satisfaction_level": Factor.SATISFACTION_LEVEL.formatted,
     "number_project": Factor.NUMBER_PROJECT.formatted,
@@ -157,7 +191,6 @@ Factor._factors = {
 }
 
 segments = {
-    # "Department": dept_map,
     "Department": Department,
     "Tenure": Tenure,
     "Performance": Perf,
