@@ -1,5 +1,4 @@
 import altair as alt
-import altair as alt
 import numpy as np
 import streamlit as st
 
@@ -64,22 +63,3 @@ if select_segment:
                 if etiquette_pos < nb_etiquettes:
                     col2.markdown(etiquettes[etiquette_pos], unsafe_allow_html=True)
                     etiquette_pos += 1
-
-# =================== Turnover Factors ===================
-st.subheader("Turnover Factors", divider=True)
-st.write("This section highlights the factors that explain employee turnover the most.")
-df_importance = get_feat_importance(_pipeline=pipeline)
-
-chart = (
-    alt.Chart(df_importance)
-    .mark_bar(size=10)
-    .encode(
-        y=alt.X("Factor:N", axis=alt.Axis(orient="left")).sort("-x"),
-        x=alt.Y("Importance (%):Q", scale=alt.Scale(reverse=False)),
-        tooltip=alt.Tooltip(["Factor", "Importance (%)"])
-    )
-    .properties(width=800, height=300, title="Factor Importance")
-    .interactive()
-)
-
-st.altair_chart(chart)
