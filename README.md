@@ -63,7 +63,7 @@ We picked the `average precision` as our main evaluation metric for the followin
 
 Employee satisfaction, work load, tenure and performance evaluation strongly impact employee turnover.
 
-<img src="img/es-importance.png" width="500" height="350">
+<img src="img/es-importance.png" width="600" height="350">
 
 The leadership team should put in place actions to tackle these areas. Here are a few data-driven recommendations:
 
