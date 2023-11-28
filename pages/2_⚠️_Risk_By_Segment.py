@@ -1,9 +1,8 @@
-import altair as alt
 import numpy as np
 import streamlit as st
 
 from cache.dataset import load_full_data
-from cache.model import get_feat_importance, load_model
+from cache.model import load_model
 from utils.html_formatter import format_etiquettes
 from utils.turnover_calculator import turnover_by_segment
 from utils.utils import (

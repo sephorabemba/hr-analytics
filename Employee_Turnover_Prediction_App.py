@@ -1,14 +1,6 @@
-import numpy as np
-import pandas as pd
 import streamlit as st
 
 from cache.dataset import load_full_data
-from cache.model import load_model
-from utils.html_formatter import format_etiquettes_recos
-from utils.utils import (
-    Factor,
-    recos_filepath,
-)
 
 st.set_page_config(
     page_title="Employee Turnover Prediction App",
@@ -66,28 +58,6 @@ https://www.kaggle.com/datasets/mfaisalqureshi/hr-analytics-and-job-prediction).
 
 st.markdown(summary)
 
-
-@st.cache_data
-def load_recos():
-    df_reco = pd.read_csv(recos_filepath)
-    return df_reco
-
-
-@st.cache_data
-def compare_turnover(turnover_actual, turnover_pred, turnover_count_actual, turnover_count_pred, nb_employees):
-    """
-
-    :return:
-    """
-    delta = np.abs(turnover_pred - turnover_actual)
-    return (f"""
-    Total number of employees Q3: {nb_employees}
-    Actual turnover: {turnover_actual:.2f}% ({turnover_count_actual}/{nb_employees} people)
-    Predicted turnover: {turnover_pred:.2f}% ({turnover_count_pred}/{nb_employees} people)
-    Delta: {delta:.2f} pt
-    """)
-
-
 # ======= MAIN =======
 
 dict_data = load_full_data()
@@ -95,49 +65,4 @@ dict_data = load_full_data()
 if "dict_data" not in st.session_state:
     st.session_state['dict_data'] = dict_data
 
-df_train, df_valid, df_test = dict_data["df_train"], dict_data["df_valid"], dict_data["df_test"]
-X_train, y_train, X_valid, y_valid, X_test, y_test = (
-    dict_data["X_train"],
-    dict_data["y_train"],
-    dict_data["X_valid"],
-    dict_data["y_valid"],
-    dict_data["X_test"],
-    dict_data["y_test"],
-)
-pipeline = load_model()
-
-st.dataframe(df_test)
-
-# load recommendations
-df_reco = load_recos()
-
-# =================== Recommendations ===================
-
-st.subheader("Recommendations", divider=True)
-st.write(
-    "These recommendations aim at supporting data-driven decisions to "
-    "reduce employee turnover. Generated with ChatGPT."
-)
-
-factors_to_select = sorted(Factor.get_factor_formatted())
-factors_selected = st.multiselect(
-    label="Choose 1 or more factors",
-    options=factors_to_select,
-    default=None,
-)
-
-if factors_selected:
-    # df_reco
-    # get factor ids
-    factor_ids = Factor.ids_from_formatted(factors_selected)
-    # select targeted reco lines only
-    mask = df_reco["id_factor"].isin(factor_ids)
-    reco_selected = df_reco[mask]
-    reco_selected["factor_fmt"] = reco_selected["id_factor"].apply(lambda id: Factor.id_to_formatted(id))
-    reco_selected
-
-    # format etiquettes for each factor
-    etiquettes = format_etiquettes_recos(df_reco=reco_selected, df_importance=df_importance)
-    # show etiquettes
-    for e in etiquettes:
-        st.markdown(e, unsafe_allow_html=True)
+st.dataframe(dict_data["df_test"])

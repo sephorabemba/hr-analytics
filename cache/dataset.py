@@ -5,6 +5,7 @@ from utils.utils import (
     train_filepath,
     valid_filepath,
     test_filepath,
+    recos_filepath,
     dept_map,
     Perf,
     Salary,
@@ -76,3 +77,9 @@ def load_full_data():
         "y_test": y_test,
     }
     return dict_data
+
+
+@st.cache_data
+def load_recos():
+    df_reco = pd.read_csv(recos_filepath)
+    return df_reco
