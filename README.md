@@ -14,15 +14,10 @@ unseen data.
 ## Business Understanding
 
 Retaining talents in a company is important to build steady businesses. Many companies struggle with preventing
-turnover.
-The main reasons are a lack of understanding the underlying factors and not addressing the core problems.
+turnover due to a lack of understanding the underlying factors and not addressing the core problems.
 
-High turnover situations must be solved as they cause the following problems to companies, among others:
-
-- Disruption for the teams and negative impact on group morale.
-- High company cost, one to two times an employee’s annual salary per leaver (
-  source: [Josh Bersin - Deloitte](https://www.linkedin.com/pulse/20130816200159-131079-employee-retention-now-a-big-issue-why-the-tide-has-turned/)).
-- Lost productivity.
+High turnover situations must be solved as they cause disruption and are very costly. They can represent one to two
+times an employee’s annual salary (source: [Josh Bersin - Deloitte](https://www.linkedin.com/pulse/20130816200159-131079-employee-retention-now-a-big-issue-why-the-tide-has-turned/)).
 
 ## Data Understanding
 
@@ -71,11 +66,13 @@ Employee satisfaction, work load, tenure and performance evaluation strongly imp
 [Feature importance](img/es-importance.png)
 
 The leadership team should put in place actions to tackle these areas. Here are a few data-driven recommendations:
+
 - Implement regular employee feedback sessions to address concerns and improve job satisfaction.
 - Provide professional development opportunities and clear career paths.
 - Introduce flexible work arrangements for better work-life balance.
 
 We've created a Streamlit App to:
+
 * Test the model.
 * Summarize the story of this dataset.
 * Provide customized recommendations to decrease employee turnover.
