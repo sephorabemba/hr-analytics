@@ -11,9 +11,18 @@ st.sidebar.success("Select a demo from the sidebar")
 
 st.title("🔍 Employee turnover analysis 👩‍💼")
 
-st.write("Select a demo from the sidebar!")
+st.write("")
 
 st.subheader("What is this app?", divider=True)
+
+overview = f"""### Overview
+This app is a demo of employee turnover prediction
+based on the "Hr Analytics Job Prediction" [Kaggle dataset](
+https://www.kaggle.com/datasets/mfaisalqureshi/hr-analytics-and-job-prediction).
+
+Select a demo from the sidebar to uncover the story of this data
+and **learn how to decrease employee turnover!**
+"""
 
 summary = f""" ### Business case 
 Clover Electrical Inc. is a tech company specialized in sustainable electronics. The 
@@ -30,19 +39,7 @@ uncover its main factors and make recommendations on how to reduce employee turn
 
 ### Goals
 * Predict turnover with a 90% average precision.
-* Uncover impactful insights and recommendations to increase employee retention.
-
-### Business understanding
-Retaining talents in a company is important to build steady businesses. Many companies struggle with preventing turnover.
-The first reasons are lack of understanding the factors, lack of timeliness of actions, 
-actions are not addressing the core problems.
-
-High turnover must be addressed as it is:
-- Disruptive for the teams, impacts group morale negatively
-- Costly for the company: it will cost your business, on average, \$25,000 to $100,000 per employee.
-- Increase product failure by 0.74% to 0.79%: which amounts to millions of dollars.
-
-Once again, data analysis, exploration and modeling techniques are key to crack this problem.
+* Uncover impactful insights and make recommendations to increase employee retention.
 
 ### The approach
 The data team has thoroughly analyzed the survey data and has come up with a HR analytics software powered with AI to
@@ -53,9 +50,9 @@ solve this business problem (*Use 55 template*).
 - Machine Learning modeling: Gradient Boosting algorithm
 - Web app development & deployment: Streamlit, Streamlit Cloud
 
-This use case is based on the "Hr Analytics Job Prediction" dataset available on [Kaggle](
-https://www.kaggle.com/datasets/mfaisalqureshi/hr-analytics-and-job-prediction)."""
+"""
 
+st.markdown(overview)
 st.markdown(summary)
 
 # ======= MAIN =======
