@@ -2,6 +2,8 @@
 
 Analysis and prediction of employee turnover on the "Hr Analytics Job Prediction" Kaggle dataset.
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hr-analytics.streamlit.app/)
+
 ## Project Overview
 
 The goal of this project is to predict employee turnover on the "Hr Analytics Job Prediction" [Kaggle dataset](
@@ -83,9 +85,9 @@ We've created a Streamlit App to:
 
 ## Run the Streamlit Demo
 
-1. Open the demo on Streamlit Cloud...
+1. Open the demo on Streamlit Cloud:   [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hr-analytics.streamlit.app/)
 
-2. ...Or clone and run locally
+2. ...Or clone the repository and run the app locally
 
 ```
 git clone https://github.com/sephorabemba/hr-analytics.git
